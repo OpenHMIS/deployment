@@ -2,7 +2,6 @@
 <project name="tomcat-deploy" default="war">
 	<path id="catalina-ant-classpath">
 	    <fileset dir="lib">
-	        <include name="ant-contrib-1.0b3.jar" />
 	        <include name="catalina-ant.jar"/>
 	        <include name="tomcat-coyote.jar"/>
 	        <include name="tomcat-util.jar"/>
@@ -10,14 +9,19 @@
 	    </fileset>
 	</path>
 	
-	<property project-name="openmrs" />
-	<property tomcat-manager-url="http://localhost:8081/manager" />
-	<!-- <property openmrs-module-dir="/usr/share/tomcat7/.OpenMRS/modules" /> -->
-	<property openmrs-module-dir="/home/teamcity/temp/modules" />
+	<taskdef resource="net/sf/antcontrib/antlib.xml">
+  		<classpath>
+    		<pathelement location="lib/ant-contrib-1.0b3.jar"/>
+  		</classpath>
+	</taskdef>
 
 	<taskdef name="start" classname="org.apache.catalina.ant.StartTask" />
 	<taskdef name="stop" classname="org.apache.catalina.ant.StopTask" />
 	
+	<property name="project-name" value="openmrs" />
+	<property name="tomcat-manager-url" value="http://localhost:8081/manager" />
+	<property name="openmrs-module-dir" value="/usr/share/tomcat7/.OpenMRS/modules" />
+
 	<target name="stop" description="stop application in tomcat">
 		<stop url="${tomcat-manager-url}" username="${tomcat-manager-username}"
 			password="${tomcat-manager-password}" path="/${project-name}" />
@@ -36,13 +40,16 @@
 			</fileset>
 		</copy>
 
-		<!-- Create the file list of modules to be deployed -->
-		<fileset id="modules" dir="mod_deploy">
+		<!-- Update each module in the mod_deploy folder -->
+		<foreach param="module" target="update-module">
+			<fileset id="modules" dir="mod_deploy">
 			<include name="*.omod" />
 		</fileset>
+		</foreach>
+	</target>
 
-		<foreach list="modules" param="module">
-			<!-- Get module id from module file name -->
+	<target name="update-module">
+		<!-- Get module id from module file name -->
 			<basename property="module.filename" file="${module}" />
 			<propertyregex property="module_id"
 				input="${module.filename}"
@@ -56,8 +63,9 @@
 				</fileset>
 			</delete>
 
+			<echo message="Module file: ${module}" />
+
 			<!-- Copy modules into tomcat openmrs module folder -->
 			<copy todir="${openmrs-module-dir}" file="${module}" />
-		</foreach>
-	</target>	
+	</target>
 </project>
