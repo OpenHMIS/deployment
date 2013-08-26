@@ -19,12 +19,13 @@
 	<taskdef name="stop" classname="org.apache.catalina.ant.StopTask" />
 	
 	<property name="project-name" value="openmrs" />
-	<property name="tomcat-manager-url" value="http://localhost:8081/manager" />
+	<property name="tomcat-manager-url" value="http://localhost:8081/manager/text" />
 	<property name="openmrs-module-dir" value="/usr/share/tomcat7/.OpenMRS/modules" />
 
 	<target name="stop" description="stop application in tomcat">
 		<stop url="${tomcat-manager-url}" username="${tomcat-manager-username}"
-			password="${tomcat-manager-password}" path="/${project-name}" />
+			password="${tomcat-manager-password}" path="/${project-name}"
+			failonerror="false" />
 	</target>
 
 	<target name="start" description="start application in tomcat">
