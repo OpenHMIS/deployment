@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="tomcat-deploy" default="war">
+	<path id="catalina-ant-classpath">
+	    <fileset dir="lib">
+	        <include name="ant-contrib-1.0b3.jar" />
+	        <include name="catalina-ant.jar"/>
+	        <include name="tomcat-coyote.jar"/>
+	        <include name="tomcat-util.jar"/>
+	        <include name="tomcat-juli.jar"/>
+	    </fileset>
+	</path>
+	
+	<property project-name="openmrs" />
+	<property tomcat-manager-url="http://localhost:8081/manager" />
+	<!-- <property openmrs-module-dir="/usr/share/tomcat7/.OpenMRS/modules" /> -->
+	<property openmrs-module-dir="/home/teamcity/temp/modules" />
+
+	<taskdef name="start" classname="org.apache.catalina.ant.StartTask" />
+	<taskdef name="stop" classname="org.apache.catalina.ant.StopTask" />
+	
+	<target name="stop" description="stop application in tomcat">
+		<stop url="${tomcat-manager-url}" username="${tomcat-manager-username}"
+			password="${tomcat-manager-password}" path="/${project-name}" />
+	</target>
+
+	<target name="start" description="start application in tomcat">
+		<start url="${tomcat-manager-url}" username="${tomcat-manager-username}"
+			password="${tomcat-manager-password}" path="/${project-name}" />
+	</target>
+	
+	<target name="copy_modules">
+		<!-- Copy included modules to mod_deploy directory -->
+		<copy todir="mod_deploy">
+			<fileset dir="dependencies">
+				<include name="*.omod" />
+			</fileset>
+		</copy>
+
+		<!-- Create the file list of modules to be deployed -->
+		<fileset id="modules" dir="mod_deploy">
+			<include name="*.omod" />
+		</fileset>
+
+		<foreach list="modules" param="module">
+			<!-- Get module id from module file name -->
+			<basename property="module.filename" file="${module}" />
+			<propertyregex property="module_id"
+				input="${module.filename}"
+				regexp="^([^-]+)"
+				select="\0" />
+
+			<!-- Remove any modules with specified module id from tomcat openmrs module folder -->
+			<delete>
+				<fileset dir="${openmrs-module-dir}">
+					<include name="${module_id}*.omod" />
+				</fileset>
+			</delete>
+
+			<!-- Copy modules into tomcat openmrs module folder -->
+			<copy todir="${openmrs-module-dir}" file="${module}" />
+		</foreach>
+	</target>	
+</project>
