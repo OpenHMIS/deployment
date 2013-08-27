@@ -18,9 +18,64 @@
 	<taskdef name="start" classname="org.apache.catalina.ant.StartTask" />
 	<taskdef name="stop" classname="org.apache.catalina.ant.StopTask" />
 	
-	<property name="project-name" value="openmrs" />
-	<property name="tomcat-manager-url" value="http://localhost:8081/manager/text" />
-	<property name="openmrs-module-dir" value="/usr/share/tomcat7/.OpenMRS/modules" />
+	<property file="/home/teamcity/buildProperties/demo-build.properties" />
+	
+	<target name="copy_modules">
+		<!-- Clear out any previously deployed omods -->
+		<delete>
+			<fileset dir="mod_deploy">
+				<include name="*.omod" />
+			</fileset>
+		</delete>
+
+		<!-- Copy included modules to mod_deploy directory -->
+		<copy todir="mod_deploy">
+			<fileset dir="dependencies">
+				<include name="*.omod" />
+			</fileset>
+		</copy>
+
+		<!-- Copy asset modules to mod_deploy directory -->
+		<copy todir="mod_deploy">
+			<fileset dir="mod_demo">
+				<include name="*.omod" />
+			</fileset>
+		</copy>
+
+		<!-- Update each module in the mod_deploy folder -->
+		<foreach param="module" target="update-module">
+			<fileset id="modules" dir="mod_deploy">
+				<include name="*.omod" />
+			</fileset>
+		</foreach>
+	</target>
+
+	<target name="update-module">
+		<echo message="Updating module: ${module}..." />
+
+		<!-- Get module id from module file name -->
+		<basename property="module.filename" file="${module}" />
+		<!-- Finds the first '-' character and returns the text before it -->
+		<propertyregex property="module_id"
+			input="${module.filename}"
+			regexp="^([^-]+)"
+			select="\0" />
+		<echo message="Using module id: ${module_id}" />
+
+		<!-- Remove any modules that start with the module id from tomcat openmrs module folder -->
+		<echo message="Deleting existing modules with id: ${module_id}..." />
+		<delete verbose="true">
+			<fileset dir="${openmrs-module-dir}">
+				<include name="${module_id}*.omod" />
+			</fileset>
+		</delete>
+
+		<!-- Copy modules into tomcat openmrs module folder -->
+		<echo message="Copying updated module..." />
+		<copy todir="${openmrs-module-dir}" file="${module}" />
+
+		<echo message="Update complete for module ${module_id}." />
+	</target>
 
 	<target name="stop" description="stop application in tomcat">
 		<stop url="${tomcat-manager-url}" username="${tomcat-manager-username}"
@@ -31,42 +86,5 @@
 	<target name="start" description="start application in tomcat">
 		<start url="${tomcat-manager-url}" username="${tomcat-manager-username}"
 			password="${tomcat-manager-password}" path="/${project-name}" />
-	</target>
-	
-	<target name="copy_modules">
-		<!-- Copy included modules to mod_deploy directory -->
-		<copy todir="mod_deploy">
-			<fileset dir="dependencies">
-				<include name="*.omod" />
-			</fileset>
-		</copy>
-
-		<!-- Update each module in the mod_deploy folder -->
-		<foreach param="module" target="update-module">
-			<fileset id="modules" dir="mod_deploy">
-			<include name="*.omod" />
-		</fileset>
-		</foreach>
-	</target>
-
-	<target name="update-module">
-		<!-- Get module id from module file name -->
-			<basename property="module.filename" file="${module}" />
-			<propertyregex property="module_id"
-				input="${module.filename}"
-				regexp="^([^-]+)"
-				select="\0" />
-
-			<!-- Remove any modules with specified module id from tomcat openmrs module folder -->
-			<delete>
-				<fileset dir="${openmrs-module-dir}">
-					<include name="${module_id}*.omod" />
-				</fileset>
-			</delete>
-
-			<echo message="Module file: ${module}" />
-
-			<!-- Copy modules into tomcat openmrs module folder -->
-			<copy todir="${openmrs-module-dir}" file="${module}" />
 	</target>
 </project>
