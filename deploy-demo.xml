@@ -21,15 +21,15 @@
 	<property file="/home/teamcity/buildProperties/demo-build.properties" />
 	
 	<target name="copy_modules">
+		<!-- Ensure that the mod_deploy folder exists -->
+		<mkdir dir="mod_deploy" />
+
 		<!-- Clear out any previously deployed omods -->
 		<delete>
 			<fileset dir="mod_deploy">
 				<include name="*.omod" />
 			</fileset>
 		</delete>
-
-		<!-- Ensure that the mod_deploy folder exists -->
-		<mkdir dir="mod_deploy" />
 
 		<!-- Copy included modules to mod_deploy directory -->
 		<copy todir="mod_deploy">
