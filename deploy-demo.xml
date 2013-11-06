@@ -28,6 +28,9 @@
 			</fileset>
 		</delete>
 
+		<!-- Ensure that the mod_deploy folder exists -->
+		<mkdir dir="mod_deploy" />
+
 		<!-- Copy included modules to mod_deploy directory -->
 		<copy todir="mod_deploy">
 			<fileset dir="dependencies">
