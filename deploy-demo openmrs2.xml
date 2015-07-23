@@ -18,7 +18,7 @@
 	<taskdef name="start" classname="org.apache.catalina.ant.StartTask" />
 	<taskdef name="stop" classname="org.apache.catalina.ant.StopTask" />
 
-	<property file="/home/teamcity/buildProperties/demo-build.properties" />
+	<property file="/home/teamcity/buildProperties/demo2-build.properties" />
 
 	<target name="copy_modules">
 		<!-- Ensure that the mod_deploy folder exists -->
