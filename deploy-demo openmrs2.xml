@@ -88,6 +88,6 @@
 
 	<target name="start" description="start application in tomcat">
 		<start url="${tomcat-manager-url}" username="${tomcat-manager-username}"
-			password="${tomcat-manager-password}" path="/${project-name}" />
+			password="${tomcat-manager-password}" path="/${project-name}" failOnError="false" />
 	</target>
 </project>
