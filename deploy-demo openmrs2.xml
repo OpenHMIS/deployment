@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="tomcat-deploy" default="war">
+	<path id="catalina-ant-classpath">
+	    <fileset dir="lib">
+	        <include name="catalina-ant.jar"/>
+	        <include name="tomcat-coyote.jar"/>
+	        <include name="tomcat-util.jar"/>
+	        <include name="tomcat-juli.jar"/>
+	    </fileset>
+	</path>
+
+	<taskdef resource="net/sf/antcontrib/antlib.xml">
+  		<classpath>
+    		<pathelement location="lib/ant-contrib-1.0b3.jar"/>
+  		</classpath>
+	</taskdef>
+
+	<taskdef name="start" classname="org.apache.catalina.ant.StartTask" />
+	<taskdef name="stop" classname="org.apache.catalina.ant.StopTask" />
+
+	<property file="/home/teamcity/buildProperties/demo-build.properties" />
+
+	<target name="copy_modules">
+		<!-- Ensure that the mod_deploy folder exists -->
+		<mkdir dir="mod_deploy_omrs2" />
+
+		<!-- Clear out any previously deployed omods -->
+		<delete>
+			<fileset dir="mod_deploy_omrs2">
+				<include name="*.omod" />
+			</fileset>
+		</delete>
+
+		<!-- Copy included modules to mod_deploy_omrs2 directory -->
+		<copy todir="mod_deploy_omrs2">
+			<fileset dir="dependencies_omrs2">
+				<include name="*.omod" />
+			</fileset>
+		</copy>
+
+		<!-- Copy asset modules to mod_deploy directory -->
+		<copy todir="mod_deploy_omrs2">
+			<fileset dir="mod_demo">
+				<include name="*.omod" />
+			</fileset>
+		</copy>
+
+		<!-- Update each module in the mod_deploy folder -->
+		<foreach param="module" target="update-module">
+			<fileset id="modules" dir="mod_deploy_omrs2">
+				<include name="*.omod" />
+			</fileset>
+		</foreach>
+	</target>
+
+	<target name="update-module">
+		<echo message="Updating module: ${module}..." />
+
+		<!-- Get module id from module file name -->
+		<basename property="module.filename" file="${module}" />
+		<!-- Finds the first '-' character and returns the text before it -->
+		<propertyregex property="module_id"
+			input="${module.filename}"
+			regexp="^([^-]+)"
+			select="\0" />
+		<echo message="Using module id: ${module_id}" />
+
+		<!-- Remove any modules that start with the module id from tomcat openmrs module folder -->
+		<echo message="Deleting existing modules with id: ${module_id}..." />
+		<delete verbose="true">
+			<fileset dir="${openmrs-module-dir}">
+				<include name="${module_id}*.omod" />
+			</fileset>
+		</delete>
+
+		<!-- Copy modules into tomcat openmrs module folder -->
+		<echo message="Copying updated module..." />
+		<copy todir="${openmrs-module-dir}" file="${module}" />
+
+		<echo message="Update complete for module ${module_id}." />
+	</target>
+
+	<target name="stop" description="stop application in tomcat">
+		<stop url="${tomcat-manager-url}" username="${tomcat-manager-username}"
+			password="${tomcat-manager-password}" path="/${project-name}"
+			failonerror="false" />
+	</target>
+
+	<target name="start" description="start application in tomcat">
+		<start url="${tomcat-manager-url}" username="${tomcat-manager-username}"
+			password="${tomcat-manager-password}" path="/${project-name}" />
+	</target>
+</project>
